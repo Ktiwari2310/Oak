@@ -19,10 +19,6 @@ public class Issues {
     @JoinColumn(name = "poster_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "milestone_id", nullable = false)
-    private Milestone milestone;
-
     @Column(name = "index", nullable = false)
     private Integer issueNumber;
 
@@ -41,13 +37,12 @@ public class Issues {
     public Issues() {
     }
 
-    public Issues(Integer id, Repository repository, User user, Milestone milestone,
+    public Issues(Integer id, Repository repository, User user,
                   Integer issueNumber, String title, String content,
                   Boolean isClosed, LocalDateTime createdAt) {
         this.id = id;
         this.repository = repository;
         this.user = user;
-        this.milestone = milestone;
         this.issueNumber = issueNumber;
         this.title = title;
         this.content = content;
@@ -74,23 +69,13 @@ public class Issues {
     public User getUser() {
         return user;
     }
-
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public Milestone getMilestone() {
-        return milestone;
-    }
-
-    public void setMilestone(Milestone milestone) {
-        this.milestone = milestone;
     }
 
     public Integer getIssueNumber() {
         return issueNumber;
     }
-
     public void setIssueNumber(Integer issueNumber) {
         this.issueNumber = issueNumber;
     }
@@ -98,7 +83,6 @@ public class Issues {
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
         this.title = title;
     }
@@ -106,7 +90,6 @@ public class Issues {
     public String getContent() {
         return content;
     }
-
     public void setContent(String content) {
         this.content = content;
     }
@@ -114,7 +97,6 @@ public class Issues {
     public Boolean getIsClosed() {
         return isClosed;
     }
-
     public void setIsClosed(Boolean isClosed) {
         this.isClosed = isClosed;
     }
@@ -122,8 +104,19 @@ public class Issues {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+//    @ManyToOne
+//    @JoinColumn(name = "milestone_id", nullable = false)
+//    private Milestone milestone;
+//
+//    public Milestone getMilestone() {
+//        return milestone;
+//    }
+//
+//    public void setMilestone(Milestone milestone) {
+//        this.milestone = milestone;
+//    }
 }
