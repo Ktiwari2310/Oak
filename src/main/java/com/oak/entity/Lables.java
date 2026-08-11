@@ -1,5 +1,5 @@
 package com.oak.entity;
 
-public class Comment {
+public class Lables {
     
 }
