@@ -11,52 +11,64 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int issue_id;
-    private int poster_id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "issue_id",  nullable = false)
+    private Issues issue;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "poster_id", nullable = false)
+    private User poster;
+
+    @Column(nullable = false, length = 50)
     private String type;
+
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at = LocalDateTime.now();
 
-    public Comment(int issue_id, int poster_id, String type, String content) {
-        this.issue_id = issue_id;
-        this.poster_id = poster_id;
-        this.type = type;
-        this.content = content;
+    public Comment() {}
+
+    public Issues getIssue() {
+        return issue;
     }
-    public LocalDateTime getCreated_at() {
-        return created_at;
+    public void setIssue(Issues issue) {
+        this.issue = issue;
     }
-    public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
+
+    public User getPoster() {
+        return poster;
     }
+    public void setPoster(User poster) {
+        this.poster = poster;
+    }
+
     public Long getId() {
         return id;
     }
     public void setId(Long id) {
         this.id = id;
     }
-    public int getIssue_id() {
-        return issue_id;
-    }
-    public void setIssue_id(int issue_id) {
-        this.issue_id = issue_id;
-    }
-    public int getPoster_id() {
-        return poster_id;
-    }
-    public void setPoster_id(int poster_id) {
-        this.poster_id = poster_id;
-    }
+
     public String getType() {
         return type;
     }
     public void setType(String type) {
         this.type = type;
     }
+
     public String getContent() {
         return content;
     }
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public LocalDateTime getCreated_at() {
+        return created_at;
+    }
+    public void setCreated_at(LocalDateTime created_at) {
+        this.created_at = created_at;
     }
 }
