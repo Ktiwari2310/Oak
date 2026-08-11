@@ -1,4 +1,4 @@
-package com.oak;
+package com.oak.entity;
 import jakarta.persistence.*;
 
 @Entity
