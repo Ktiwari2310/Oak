@@ -1,7 +1,7 @@
 package com.oak.controller;
 
 import com.oak.entity.Comment;
-import com.oak.service.CommentService;
+import com.oak.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,40 +13,45 @@ import java.util.List;
 public class CommentController {
 
     @Autowired
-    private CommentService commentService;
+    private CommentRepository commentRepository;
 
     @GetMapping
     public List<Comment> getAllComments() {
-        return commentService.getAllComments();
+        return commentRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Comment> getCommentById(@PathVariable Long id) {
-        return commentService.getCommentById(id)
+        return commentRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/issue/{issueId}")
-    public List<Comment> getCommentsByIssue(@PathVariable Long issueId) {
-        return commentService.getCommentsByIssueId(issueId);
+    public List<Comment> getCommentsByIssue(@PathVariable Integer issueId) {
+        return commentRepository.findByIssueId(issueId);
     }
 
     @PostMapping
     public Comment createComment(@RequestBody Comment comment) {
-        return commentService.createComment(comment);
+        return commentRepository.save(comment);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Comment> updateComment(@PathVariable Long id, @RequestBody Comment comment) {
-        return commentService.updateComment(id, comment)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return commentRepository.findById(id).map(existing -> {
+            existing.setContent(comment.getContent());
+            existing.setType(comment.getType());
+            return ResponseEntity.ok(commentRepository.save(existing));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
-        boolean deleted = commentService.deleteComment(id);
-        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        if (commentRepository.existsById(id)) {
+            commentRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
