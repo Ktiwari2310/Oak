@@ -2,9 +2,6 @@ package com.oak.entity;
 
 import jakarta.persistence.*;
 
-// Explicit join entity for the Issue <-> Label many-to-many relationship.
-// Modeled as its own @Entity (rather than a plain @ManyToMany + @JoinTable)
-// because issue_labels has its own surrogate primary key "id" in the schema.
 @Entity
 @Table(name = "issue_labels")
 public class IssuesLabels {
