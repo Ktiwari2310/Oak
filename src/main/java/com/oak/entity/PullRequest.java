@@ -34,7 +34,7 @@ public class PullRequest {
     private String merge_branch_sha;
 
     @Column(name ="is_merged" ,nullable = false)
-    private boolean is_merged;
+    private boolean isMerged;
 
     @Column(name = "merged_at")
     private LocalDateTime merged_at;
@@ -89,10 +89,10 @@ public class PullRequest {
     }
 
     public boolean isIs_merged() {
-        return is_merged;
+        return isMerged;
     }
-    public void setIs_merged(boolean is_merged) {
-        this.is_merged = is_merged;
+    public void setIs_merged(boolean isMerged) {
+        this.isMerged = isMerged;
     }
 
     public LocalDateTime getMerged_at() {
