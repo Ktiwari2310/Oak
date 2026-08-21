@@ -12,8 +12,6 @@ public class PullRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issue_id",  nullable = false, unique = true)
     public Issues issues;
