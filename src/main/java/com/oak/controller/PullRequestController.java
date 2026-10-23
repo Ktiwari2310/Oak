@@ -36,12 +36,12 @@ public class PullRequestController {
     }
 
     @GetMapping("/head-repo/{repoId}")
-    public List<PullRequest> getPullRequestsByHeadRepo(@PathVariable Integer repoId) {
+    public List<PullRequest> getPullRequestsByHeadRepo(@PathVariable Long repoId) {
         return pullRequestRepository.findByHeadRepoId(repoId);
     }
 
     @GetMapping("/base-repo/{repoId}")
-    public List<PullRequest> getPullRequestsByBaseRepo(@PathVariable Integer repoId) {
+    public List<PullRequest> getPullRequestsByBaseRepo(@PathVariable Long repoId) {
         return pullRequestRepository.findByBaseRepoId(repoId);
     }
 
@@ -53,9 +53,9 @@ public class PullRequestController {
     @PutMapping("/{id}")
     public ResponseEntity<PullRequest> updatePullRequest(@PathVariable Long id, @RequestBody PullRequest pullRequest) {
         return pullRequestRepository.findById(id).map(existing -> {
-            existing.setHeadBranch(pullRequest.getHead_branch());
-            existing.setBaseBranch(pullRequest.getBase_branch());
-            existing.setMergeBranchSha(pullRequest.getMerge_branch_sha());
+            existing.setHead_branch(pullRequest.getHead_branch());
+            existing.setBase_branch(pullRequest.getBase_branch());
+            existing.setMerge_branch_sha(pullRequest.getMerge_branch_sha());
             return ResponseEntity.ok(pullRequestRepository.save(existing));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -63,7 +63,7 @@ public class PullRequestController {
     @PatchMapping("/{id}/merge")
     public ResponseEntity<PullRequest> mergePullRequest(@PathVariable Long id) {
         return pullRequestRepository.findById(id).map(existing -> {
-            existing.setIs_merged(true);
+            existing.setIsMerged(true);
             existing.setMerged_at(LocalDateTime.now());
             return ResponseEntity.ok(pullRequestRepository.save(existing));
         }).orElse(ResponseEntity.notFound().build());

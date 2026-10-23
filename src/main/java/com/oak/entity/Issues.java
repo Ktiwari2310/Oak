@@ -29,10 +29,10 @@ public class Issues {
     private String content;
 
     @Column(name = "is_closed", nullable = false)
-    private Boolean isClosed;
+    private Boolean isClosed = false;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Issues() {
     }

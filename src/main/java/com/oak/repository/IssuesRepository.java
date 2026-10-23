@@ -1,17 +1,16 @@
 package com.oak.repository;
 
-import com.oak.entity.Issues;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.oak.entity.Issues;
+
 public interface IssuesRepository extends JpaRepository<Issues, Integer> {
 
     List<Issues> findByRepositoryId(Integer repositoryId);
 
-    List<Issues> findByUserId(Integer userId);
+    List<Issues> findByUserId(Long userId);
 
     List<Issues> findByIsClosed(Boolean isClosed);
 

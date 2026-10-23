@@ -4,12 +4,14 @@ import com.oak.entity.Repository;
 import com.oak.repository.RepositoryRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/repositories")
+@RequestMapping("/api/repositories")
 public class RepositoryController {
 
     @Autowired
@@ -23,29 +25,42 @@ public class RepositoryController {
 
     // Get repository by ID
     @GetMapping("/{id}")
-    public Repository getRepositoryById(@PathVariable Long id) {
-        return repositoryRepository.findById(id).orElse(null);
+    public ResponseEntity<Repository> getRepositoryById(@PathVariable Long id) {
+        return repositoryRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // Create repository
     @PostMapping
-    public Repository createRepository(@RequestBody Repository repository) {
-        return repositoryRepository.save(repository);
+    public ResponseEntity<Repository> createRepository(@RequestBody Repository repository) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(repositoryRepository.save(repository));
     }
 
     // Update repository
     @PutMapping("/{id}")
-    public Repository updateRepository(
+    public ResponseEntity<Repository> updateRepository(
             @PathVariable Long id,
             @RequestBody Repository repository) {
 
-        repository.setId(id);
-        return repositoryRepository.save(repository);
+        return repositoryRepository.findById(id).map(existing -> {
+            existing.setOwner(repository.getOwner());
+            existing.setName(repository.getName());
+            existing.setDescription(repository.getDescription());
+            existing.setIs_private(repository.getIs_private());
+            existing.setIs_mirror(repository.getIs_mirror());
+            existing.setClone_url(repository.getClone_url());
+            return ResponseEntity.ok(repositoryRepository.save(existing));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     // Delete repository
     @DeleteMapping("/{id}")
-    public void deleteRepository(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRepository(@PathVariable Long id) {
+        if (!repositoryRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
         repositoryRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

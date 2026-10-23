@@ -28,7 +28,7 @@ public class LabelsController {
     }
 
     @GetMapping("/repository/{repoId}")
-    public List<Labels> getLabelsByRepository(@PathVariable Integer repoId) {
+    public List<Labels> getLabelsByRepository(@PathVariable Long repoId) {
         return labelsRepository.findByRepositoryId(repoId);
     }
 

@@ -1,6 +1,7 @@
 package com.oak.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class Labels{
 
     // one label appears on many issue_labels join rows (issue_labels.label_id -> labels.id)
     @OneToMany(mappedBy = "label", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<IssuesLabels> issueLabels = new ArrayList<>();
 
     public Labels() {}
