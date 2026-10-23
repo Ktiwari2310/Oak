@@ -52,7 +52,7 @@ public class IssuesController {
             existing.setTitle(issue.getTitle());
             existing.setContent(issue.getContent());
             existing.setIsClosed(issue.getIsClosed());
-            existing.setUser(issue.getUser());
+            existing.setPoster(issue.getPoster());
             existing.setRepository(issue.getRepository());
             existing.setIssueNumber(issue.getIssueNumber());
             return ResponseEntity.ok(issuesRepository.save(existing));

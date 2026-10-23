@@ -17,7 +17,7 @@ public class Issues {
 
     @ManyToOne
     @JoinColumn(name = "poster_id", nullable = false)
-    private User user;
+    private User poster;
 
     @Column(name = "index", nullable = false)
     private Integer issueNumber;
@@ -37,12 +37,12 @@ public class Issues {
     public Issues() {
     }
 
-    public Issues(Integer id, Repository repository, User user,
+    public Issues(Integer id, Repository repository, User poster,
                   Integer issueNumber, String title, String content,
                   Boolean isClosed, LocalDateTime createdAt) {
         this.id = id;
         this.repository = repository;
-        this.user = user;
+        this.poster = poster;
         this.issueNumber = issueNumber;
         this.title = title;
         this.content = content;
@@ -66,11 +66,11 @@ public class Issues {
         this.repository = repository;
     }
 
-    public User getUser() {
-        return user;
+    public User getPoster() {
+        return poster;
     }
-    public void setUser(User user) {
-        this.user = user;
+    public void setPoster(User poster) {
+        this.poster = poster;
     }
 
     public Integer getIssueNumber() {
