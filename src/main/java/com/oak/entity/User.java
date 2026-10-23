@@ -43,7 +43,7 @@ public class User {
 
     // One User can post many Issues
     // Issues stores this relationship in its "user" field, not "poster".
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "poster")
     @JsonIgnore
     private List<Issues> issues;
 

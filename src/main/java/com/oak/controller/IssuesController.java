@@ -1,15 +1,21 @@
 package com.oak.controller;
 
 import com.oak.entity.Issues;
+import com.oak.entity.Repository;
+import com.oak.entity.User;
 import com.oak.repository.IssuesRepository;
-import com.oak.response.IssuesResponse;
+import com.oak.repository.RepositoryRepository;
+import com.oak.repository.UserRepository;
 import com.oak.response.ApiResponse;
+import com.oak.response.IssuesResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -20,6 +26,12 @@ public class IssuesController {
 
     @Autowired
     private IssuesRepository issuesRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RepositoryRepository repositoryRepository;
 
     @GetMapping
     public ApiResponse<List<IssuesResponse>> getAllIssues() {
@@ -52,10 +64,13 @@ public class IssuesController {
     }
 
     @GetMapping("/repository/{repoId}/number/{issueNumber}")
-    public ResponseEntity<ApiResponse<IssuesResponse>> getIssueByRepoAndNumber(@PathVariable Integer repoId,
-                                                            @PathVariable Integer issueNumber) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> getIssueByRepoAndNumber(
+            @PathVariable Integer repoId,
+            @PathVariable Integer issueNumber) {
+
         return issuesRepository.findByRepositoryIdAndIssueNumber(repoId, issueNumber)
-                .stream().findFirst()
+                .stream()
+                .findFirst()
                 .map(IssuesResponse::from)
                 .map(response -> {
                     logger.info("Issue retrieved successfully: repositoryId={}, issueNumber={}", repoId, issueNumber);
@@ -68,10 +83,38 @@ public class IssuesController {
     }
 
     @PostMapping
-    public ApiResponse<IssuesResponse> createIssue(@RequestBody Issues issue) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> createIssue(@RequestBody Issues issue) {
+        if (issue.getPoster() == null || issue.getPoster().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (issue.getRepository() == null || issue.getRepository().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        User poster = userRepository.findById(issue.getPoster().getId()).orElse(null);
+        Repository repository = repositoryRepository.findById(issue.getRepository().getId()).orElse(null);
+
+        if (poster == null || repository == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        issue.setId(null);
+        issue.setPoster(poster);
+        issue.setRepository(repository);
+
+        if (issue.getCreatedAt() == null) {
+            issue.setCreatedAt(LocalDateTime.now());
+        }
+
+        if (issue.getIsClosed() == null) {
+            issue.setIsClosed(false);
+        }
+
         Issues savedIssue = issuesRepository.save(issue);
         logger.info("Issue created successfully: id={}", savedIssue.getId());
-        return ApiResponse.success("Issue created successfully", IssuesResponse.from(savedIssue));
+
+        return ResponseEntity.ok(ApiResponse.success("Issue created successfully", IssuesResponse.from(savedIssue)));
     }
 
     @PutMapping("/{id}")
@@ -80,9 +123,18 @@ public class IssuesController {
             existing.setTitle(issue.getTitle());
             existing.setContent(issue.getContent());
             existing.setIsClosed(issue.getIsClosed());
-            existing.setUser(issue.getUser());
-            existing.setRepository(issue.getRepository());
             existing.setIssueNumber(issue.getIssueNumber());
+
+            if (issue.getPoster() != null && issue.getPoster().getId() != null) {
+                userRepository.findById(issue.getPoster().getId())
+                        .ifPresent(existing::setPoster);
+            }
+
+            if (issue.getRepository() != null && issue.getRepository().getId() != null) {
+                repositoryRepository.findById(issue.getRepository().getId())
+                        .ifPresent(existing::setRepository);
+            }
+
             Issues updatedIssue = issuesRepository.save(existing);
             logger.info("Issue updated successfully: id={}", id);
             return ResponseEntity.ok(ApiResponse.success("Issue updated successfully", IssuesResponse.from(updatedIssue)));
@@ -125,6 +177,7 @@ public class IssuesController {
             logger.info("Issue deleted successfully: id={}", id);
             return ResponseEntity.ok(ApiResponse.success("Issue deleted successfully", null));
         }
+
         logger.warn("Issue deletion failed: id={} was not found", id);
         return ResponseEntity.notFound().build();
     }
