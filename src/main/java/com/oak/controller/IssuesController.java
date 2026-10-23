@@ -2,6 +2,8 @@ package com.oak.controller;
 
 import com.oak.entity.Issues;
 import com.oak.repository.IssuesRepository;
+import com.oak.response.IssuesResponse;
+import com.oak.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,38 +18,42 @@ public class IssuesController {
     private IssuesRepository issuesRepository;
 
     @GetMapping
-    public List<Issues> getAllIssues() {
-        return issuesRepository.findAll();
+    public ApiResponse<List<IssuesResponse>> getAllIssues() {
+        return ApiResponse.success("Issues retrieved successfully",
+                issuesRepository.findAll().stream().map(IssuesResponse::from).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Issues> getIssueById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> getIssueById(@PathVariable Integer id) {
         return issuesRepository.findById(id)
-                .map(ResponseEntity::ok)
+                .map(IssuesResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success("Issue retrieved successfully", response)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/repository/{repoId}")
-    public List<Issues> getIssuesByRepository(@PathVariable Integer repoId) {
-        return issuesRepository.findByRepositoryId(repoId);
+    public ApiResponse<List<IssuesResponse>> getIssuesByRepository(@PathVariable Integer repoId) {
+        return ApiResponse.success("Issues retrieved successfully",
+                issuesRepository.findByRepositoryId(repoId).stream().map(IssuesResponse::from).toList());
     }
 
     @GetMapping("/repository/{repoId}/number/{issueNumber}")
-    public ResponseEntity<Issues> getIssueByRepoAndNumber(@PathVariable Integer repoId,
+    public ResponseEntity<ApiResponse<IssuesResponse>> getIssueByRepoAndNumber(@PathVariable Integer repoId,
                                                             @PathVariable Integer issueNumber) {
         return issuesRepository.findByRepositoryIdAndIssueNumber(repoId, issueNumber)
                 .stream().findFirst()
-                .map(ResponseEntity::ok)
+                .map(IssuesResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success("Issue retrieved successfully", response)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Issues createIssue(@RequestBody Issues issue) {
-        return issuesRepository.save(issue);
+    public ApiResponse<IssuesResponse> createIssue(@RequestBody Issues issue) {
+        return ApiResponse.success("Issue created successfully", IssuesResponse.from(issuesRepository.save(issue)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Issues> updateIssue(@PathVariable Integer id, @RequestBody Issues issue) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> updateIssue(@PathVariable Integer id, @RequestBody Issues issue) {
         return issuesRepository.findById(id).map(existing -> {
             existing.setTitle(issue.getTitle());
             existing.setContent(issue.getContent());
@@ -55,31 +61,34 @@ public class IssuesController {
             existing.setUser(issue.getUser());
             existing.setRepository(issue.getRepository());
             existing.setIssueNumber(issue.getIssueNumber());
-            return ResponseEntity.ok(issuesRepository.save(existing));
+            return ResponseEntity.ok(ApiResponse.success("Issue updated successfully",
+                    IssuesResponse.from(issuesRepository.save(existing))));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/close")
-    public ResponseEntity<Issues> closeIssue(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> closeIssue(@PathVariable Integer id) {
         return issuesRepository.findById(id).map(existing -> {
             existing.setIsClosed(true);
-            return ResponseEntity.ok(issuesRepository.save(existing));
+            return ResponseEntity.ok(ApiResponse.success("Issue closed successfully",
+                    IssuesResponse.from(issuesRepository.save(existing))));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/{id}/reopen")
-    public ResponseEntity<Issues> reopenIssue(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<IssuesResponse>> reopenIssue(@PathVariable Integer id) {
         return issuesRepository.findById(id).map(existing -> {
             existing.setIsClosed(false);
-            return ResponseEntity.ok(issuesRepository.save(existing));
+            return ResponseEntity.ok(ApiResponse.success("Issue reopened successfully",
+                    IssuesResponse.from(issuesRepository.save(existing))));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIssue(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteIssue(@PathVariable Integer id) {
         if (issuesRepository.existsById(id)) {
             issuesRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.success("Issue deleted successfully", null));
         }
         return ResponseEntity.notFound().build();
     }

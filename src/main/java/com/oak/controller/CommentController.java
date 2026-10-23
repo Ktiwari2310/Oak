@@ -2,6 +2,8 @@ package com.oak.controller;
 
 import com.oak.entity.Comment;
 import com.oak.repository.CommentRepository;
+import com.oak.response.CommentResponse;
+import com.oak.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,41 +18,46 @@ public class CommentController {
     private CommentRepository commentRepository;
 
     @GetMapping
-    public List<Comment> getAllComments() {
-        return commentRepository.findAll();
+    public ApiResponse<List<CommentResponse>> getAllComments() {
+        return ApiResponse.success("Comments retrieved successfully",
+                commentRepository.findAll().stream().map(CommentResponse::from).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Comment> getCommentById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<CommentResponse>> getCommentById(@PathVariable Long id) {
         return commentRepository.findById(id)
-                .map(ResponseEntity::ok)
+                .map(CommentResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success("Comment retrieved successfully", response)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/issue/{issueId}")
-    public List<Comment> getCommentsByIssue(@PathVariable Integer issueId) {
-        return commentRepository.findByIssueId(issueId);
+    public ApiResponse<List<CommentResponse>> getCommentsByIssue(@PathVariable Integer issueId) {
+        return ApiResponse.success("Comments retrieved successfully",
+                commentRepository.findByIssueId(issueId).stream().map(CommentResponse::from).toList());
     }
 
     @PostMapping
-    public Comment createComment(@RequestBody Comment comment) {
-        return commentRepository.save(comment);
+    public ApiResponse<CommentResponse> createComment(@RequestBody Comment comment) {
+        return ApiResponse.success("Comment created successfully",
+                CommentResponse.from(commentRepository.save(comment)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Comment> updateComment(@PathVariable Long id, @RequestBody Comment comment) {
+    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(@PathVariable Long id, @RequestBody Comment comment) {
         return commentRepository.findById(id).map(existing -> {
             existing.setContent(comment.getContent());
             existing.setType(comment.getType());
-            return ResponseEntity.ok(commentRepository.save(existing));
+            return ResponseEntity.ok(ApiResponse.success("Comment updated successfully",
+                    CommentResponse.from(commentRepository.save(existing))));
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteComment(@PathVariable Long id) {
         if (commentRepository.existsById(id)) {
             commentRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.success("Comment deleted successfully", null));
         }
         return ResponseEntity.notFound().build();
     }
