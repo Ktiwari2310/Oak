@@ -14,47 +14,73 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.oak.entity.IssuesLabels;
 import com.oak.repository.IssuesLabelsRepository;
+import com.oak.response.IssuesLabelsResponse;
+import com.oak.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/issue-labels")
 public class IssuesLabelsController {
 
+    private static final Logger logger = LoggerFactory.getLogger(IssuesLabelsController.class);
+
     @Autowired
     private IssuesLabelsRepository issuesLabelsRepository;
 
     @GetMapping
-    public List<IssuesLabels> getAllIssuesLabels() {
-        return issuesLabelsRepository.findAll();
+    public ApiResponse<List<IssuesLabelsResponse>> getAllIssuesLabels() {
+        List<IssuesLabels> issueLabels = issuesLabelsRepository.findAll();
+        logger.info("Issue labels retrieved successfully: count={}", issueLabels.size());
+        return ApiResponse.success("Issue labels retrieved successfully",
+                issueLabels.stream().map(IssuesLabelsResponse::from).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IssuesLabels> getIssuesLabelById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<IssuesLabelsResponse>> getIssuesLabelById(@PathVariable Integer id) {
         return issuesLabelsRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(IssuesLabelsResponse::from)
+                .map(response -> {
+                    logger.info("Issue label retrieved successfully: id={}", id);
+                    return ResponseEntity.ok(ApiResponse.success("Issue label retrieved successfully", response));
+                })
+                .orElseGet(() -> {
+                    logger.warn("Issue label retrieval failed: id={} was not found", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @GetMapping("/issue/{issueId}")
-    public List<IssuesLabels> getLabelsByIssue(@PathVariable Integer issueId) {
-        return issuesLabelsRepository.findByIssueId(issueId);
+    public ApiResponse<List<IssuesLabelsResponse>> getLabelsByIssue(@PathVariable Integer issueId) {
+        List<IssuesLabels> issueLabels = issuesLabelsRepository.findByIssueId(issueId);
+        logger.info("Issue labels retrieved successfully for issue: issueId={}, count={}", issueId, issueLabels.size());
+        return ApiResponse.success("Issue labels retrieved successfully",
+                issueLabels.stream().map(IssuesLabelsResponse::from).toList());
     }
 
     @GetMapping("/label/{labelId}")
-    public List<IssuesLabels> getIssuesByLabel(@PathVariable Integer labelId) {
-        return issuesLabelsRepository.findByLabelId(labelId);
+    public ApiResponse<List<IssuesLabelsResponse>> getIssuesByLabel(@PathVariable Integer labelId) {
+        List<IssuesLabels> issueLabels = issuesLabelsRepository.findByLabelId(labelId);
+        logger.info("Issue labels retrieved successfully for label: labelId={}, count={}", labelId, issueLabels.size());
+        return ApiResponse.success("Issue labels retrieved successfully",
+                issueLabels.stream().map(IssuesLabelsResponse::from).toList());
     }
 
     @PostMapping
-    public IssuesLabels createIssuesLabel(@RequestBody IssuesLabels issuesLabel) {
-        return issuesLabelsRepository.save(issuesLabel);
+    public ApiResponse<IssuesLabelsResponse> createIssuesLabel(@RequestBody IssuesLabels issuesLabel) {
+        IssuesLabels savedIssueLabel = issuesLabelsRepository.save(issuesLabel);
+        logger.info("Issue label created successfully: id={}", savedIssueLabel.getId());
+        return ApiResponse.success("Issue label created successfully", IssuesLabelsResponse.from(savedIssueLabel));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIssuesLabel(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteIssuesLabel(@PathVariable Integer id) {
         if (issuesLabelsRepository.existsById(id)) {
             issuesLabelsRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+            logger.info("Issue label deleted successfully: id={}", id);
+            return ResponseEntity.ok(ApiResponse.success("Issue label deleted successfully", null));
         }
+        logger.warn("Issue label deletion failed: id={} was not found", id);
         return ResponseEntity.notFound().build();
     }
 }
