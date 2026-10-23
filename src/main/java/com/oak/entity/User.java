@@ -12,7 +12,6 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @Column(nullable = false, length = 100)
@@ -35,7 +34,7 @@ public class User {
     private LocalDateTime created_at = LocalDateTime.now();
 
 
-   
+
 
     // One User can own many Repositories
     @OneToMany(mappedBy = "owner")
