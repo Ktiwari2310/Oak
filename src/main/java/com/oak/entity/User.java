@@ -1,6 +1,8 @@
 package com.oak.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +23,7 @@ public class User {
     @Column(nullable = false, length = 255)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password_hash", nullable = false, length = 255)
     private String password_hash;
 
@@ -31,18 +34,22 @@ public class User {
     private LocalDateTime created_at = LocalDateTime.now();
 
 
-   
+
 
     // One User can own many Repositories
     @OneToMany(mappedBy = "owner")
+    @JsonIgnore
     private List<Repository> repositories;
 
     // One User can post many Issues
+    // Issues stores this relationship in its "user" field, not "poster".
     @OneToMany(mappedBy = "poster")
+    @JsonIgnore
     private List<Issues> issues;
 
     // One User can post many Comments
     @OneToMany(mappedBy = "poster")
+    @JsonIgnore
     private List<Comment> comments;
 
 

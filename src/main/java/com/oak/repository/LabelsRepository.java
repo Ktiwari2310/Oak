@@ -1,15 +1,14 @@
 package com.oak.repository;
 
-import com.oak.entity.Labels;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.oak.entity.Labels;
+
 public interface LabelsRepository extends JpaRepository<Labels, Integer> {
 
-    List<Labels> findByRepositoryId(Integer repositoryId);
+    List<Labels> findByRepositoryId(Long repositoryId);
 
     List<Labels> findByName(String name);
 }

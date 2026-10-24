@@ -11,28 +11,28 @@ public class Issues {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "repo_id", nullable = false)
     private Repository repository;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "poster_id", nullable = false)
     private User poster;
 
     @Column(name = "index", nullable = false)
     private Integer issueNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "text", nullable = false)
     private String content;
 
     @Column(name = "is_closed", nullable = false)
-    private Boolean isClosed;
+    private Boolean isClosed = false;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Issues() {
     }
@@ -76,6 +76,7 @@ public class Issues {
     public Integer getIssueNumber() {
         return issueNumber;
     }
+
     public void setIssueNumber(Integer issueNumber) {
         this.issueNumber = issueNumber;
     }
@@ -83,6 +84,7 @@ public class Issues {
     public String getTitle() {
         return title;
     }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -90,6 +92,7 @@ public class Issues {
     public String getContent() {
         return content;
     }
+
     public void setContent(String content) {
         this.content = content;
     }
@@ -97,6 +100,7 @@ public class Issues {
     public Boolean getIsClosed() {
         return isClosed;
     }
+
     public void setIsClosed(Boolean isClosed) {
         this.isClosed = isClosed;
     }
@@ -104,19 +108,8 @@ public class Issues {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-//    @ManyToOne
-//    @JoinColumn(name = "milestone_id", nullable = false)
-//    private Milestone milestone;
-//
-//    public Milestone getMilestone() {
-//        return milestone;
-//    }
-//
-//    public void setMilestone(Milestone milestone) {
-//        this.milestone = milestone;
-//    }
 }

@@ -2,6 +2,10 @@ package com.oak.controller;
 
 import com.oak.entity.PullRequest;
 import com.oak.repository.PullRequestRepository;
+import com.oak.response.PullRequestResponse;
+import com.oak.response.ApiResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,68 +17,112 @@ import java.util.List;
 @RequestMapping("/api/pull-requests")
 public class PullRequestController {
 
+    private static final Logger logger = LoggerFactory.getLogger(PullRequestController.class);
+
     @Autowired
     private PullRequestRepository pullRequestRepository;
 
     @GetMapping
-    public List<PullRequest> getAllPullRequests() {
-        return pullRequestRepository.findAll();
+    public ApiResponse<List<PullRequestResponse>> getAllPullRequests() {
+        List<PullRequest> pullRequests = pullRequestRepository.findAll();
+        logger.info("Pull requests retrieved successfully: count={}", pullRequests.size());
+        return ApiResponse.success("Pull requests retrieved successfully",
+                pullRequests.stream().map(PullRequestResponse::from).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PullRequest> getPullRequestById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PullRequestResponse>> getPullRequestById(@PathVariable Long id) {
         return pullRequestRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(PullRequestResponse::from)
+                .map(response -> {
+                    logger.info("Pull request retrieved successfully: id={}", id);
+                    return ResponseEntity.ok(ApiResponse.success("Pull request retrieved successfully", response));
+                })
+                .orElseGet(() -> {
+                    logger.warn("Pull request retrieval failed: id={} was not found", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @GetMapping("/issue/{issueId}")
-    public ResponseEntity<PullRequest> getPullRequestByIssue(@PathVariable Integer issueId) {
+    public ResponseEntity<ApiResponse<PullRequestResponse>> getPullRequestByIssue(@PathVariable Integer issueId) {
         return pullRequestRepository.findByIssuesId(issueId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(PullRequestResponse::from)
+                .map(response -> {
+                    logger.info("Pull request retrieved successfully for issue: issueId={}", issueId);
+                    return ResponseEntity.ok(ApiResponse.success("Pull request retrieved successfully", response));
+                })
+                .orElseGet(() -> {
+                    logger.warn("Pull request retrieval failed: issueId={} was not found", issueId);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @GetMapping("/head-repo/{repoId}")
-    public List<PullRequest> getPullRequestsByHeadRepo(@PathVariable Integer repoId) {
-        return pullRequestRepository.findByHeadRepoId(repoId);
+    public ApiResponse<List<PullRequestResponse>> getPullRequestsByHeadRepo(@PathVariable Long repoId) {
+        List<PullRequest> pullRequests = pullRequestRepository.findByHeadRepoId(repoId);
+        logger.info("Pull requests retrieved successfully for head repository: repositoryId={}, count={}",
+                repoId, pullRequests.size());
+        return ApiResponse.success("Pull requests retrieved successfully",
+                pullRequests.stream().map(PullRequestResponse::from).toList());
     }
 
     @GetMapping("/base-repo/{repoId}")
-    public List<PullRequest> getPullRequestsByBaseRepo(@PathVariable Integer repoId) {
-        return pullRequestRepository.findByBaseRepoId(repoId);
+    public ApiResponse<List<PullRequestResponse>> getPullRequestsByBaseRepo(@PathVariable Long repoId) {
+        List<PullRequest> pullRequests = pullRequestRepository.findByBaseRepoId(repoId);
+        logger.info("Pull requests retrieved successfully for base repository: repositoryId={}, count={}",
+                repoId, pullRequests.size());
+        return ApiResponse.success("Pull requests retrieved successfully",
+                pullRequests.stream().map(PullRequestResponse::from).toList());
     }
 
     @PostMapping
-    public PullRequest createPullRequest(@RequestBody PullRequest pullRequest) {
-        return pullRequestRepository.save(pullRequest);
+    public ApiResponse<PullRequestResponse> createPullRequest(@RequestBody PullRequest pullRequest) {
+        PullRequest savedPullRequest = pullRequestRepository.save(pullRequest);
+        logger.info("Pull request created successfully: id={}", savedPullRequest.getId());
+        return ApiResponse.success("Pull request created successfully",
+                PullRequestResponse.from(savedPullRequest));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PullRequest> updatePullRequest(@PathVariable Long id, @RequestBody PullRequest pullRequest) {
+    public ResponseEntity<ApiResponse<PullRequestResponse>> updatePullRequest(@PathVariable Long id, @RequestBody PullRequest pullRequest) {
         return pullRequestRepository.findById(id).map(existing -> {
-            existing.setHeadBranch(pullRequest.getHead_branch());
-            existing.setBaseBranch(pullRequest.getBase_branch());
-            existing.setMergeBranchSha(pullRequest.getMerge_branch_sha());
-            return ResponseEntity.ok(pullRequestRepository.save(existing));
-        }).orElse(ResponseEntity.notFound().build());
+            existing.setHead_branch(pullRequest.getHead_branch());
+            existing.setBase_branch(pullRequest.getBase_branch());
+            existing.setMerge_branch_sha(pullRequest.getMerge_branch_sha());
+            PullRequest updatedPullRequest = pullRequestRepository.save(existing);
+            logger.info("Pull request updated successfully: id={}", id);
+            return ResponseEntity.ok(ApiResponse.success("Pull request updated successfully",
+                    PullRequestResponse.from(updatedPullRequest)));
+        }).orElseGet(() -> {
+            logger.warn("Pull request update failed: id={} was not found", id);
+            return ResponseEntity.notFound().build();
+        });
     }
 
     @PatchMapping("/{id}/merge")
-    public ResponseEntity<PullRequest> mergePullRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PullRequestResponse>> mergePullRequest(@PathVariable Long id) {
         return pullRequestRepository.findById(id).map(existing -> {
-            existing.setIs_merged(true);
+            existing.setIsMerged(true);
             existing.setMerged_at(LocalDateTime.now());
-            return ResponseEntity.ok(pullRequestRepository.save(existing));
-        }).orElse(ResponseEntity.notFound().build());
+            PullRequest mergedPullRequest = pullRequestRepository.save(existing);
+            logger.info("Pull request merged successfully: id={}", id);
+            return ResponseEntity.ok(ApiResponse.success("Pull request merged successfully",
+                    PullRequestResponse.from(mergedPullRequest)));
+        }).orElseGet(() -> {
+            logger.warn("Pull request merge failed: id={} was not found", id);
+            return ResponseEntity.notFound().build();
+        });
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePullRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deletePullRequest(@PathVariable Long id) {
         if (pullRequestRepository.existsById(id)) {
             pullRequestRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+            logger.info("Pull request deleted successfully: id={}", id);
+            return ResponseEntity.ok(ApiResponse.success("Pull request deleted successfully", null));
         }
+        logger.warn("Pull request deletion failed: id={} was not found", id);
         return ResponseEntity.notFound().build();
     }
 }

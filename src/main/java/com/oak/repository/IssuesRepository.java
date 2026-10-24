@@ -1,12 +1,9 @@
 package com.oak.repository;
 
-import com.oak.entity.Issues;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.oak.entity.Issues;
 
-@Repository
 public interface IssuesRepository extends JpaRepository<Issues, Integer> {
 
     List<Issues> findByRepositoryId(Integer repositoryId);
