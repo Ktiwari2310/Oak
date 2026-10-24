@@ -8,7 +8,7 @@ public interface IssuesRepository extends JpaRepository<Issues, Integer> {
 
     List<Issues> findByRepositoryId(Integer repositoryId);
 
-    List<Issues> findByPosterId(Integer posterId);
+    List<Issues> findByPosterId(Long userId);
 
     List<Issues> findByIsClosed(Boolean isClosed);
 

@@ -37,14 +37,17 @@ public class Issues {
     public Issues() {
     }
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        if (isClosed == null) {
-            isClosed = false;
-        }
+    public Issues(Integer id, Repository repository, User poster,
+                  Integer issueNumber, String title, String content,
+                  Boolean isClosed, LocalDateTime createdAt) {
+        this.id = id;
+        this.repository = repository;
+        this.poster = poster;
+        this.issueNumber = issueNumber;
+        this.title = title;
+        this.content = content;
+        this.isClosed = isClosed;
+        this.createdAt = createdAt;
     }
 
     public Integer getId() {
@@ -66,7 +69,6 @@ public class Issues {
     public User getPoster() {
         return poster;
     }
-
     public void setPoster(User poster) {
         this.poster = poster;
     }

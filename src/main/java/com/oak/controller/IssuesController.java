@@ -123,6 +123,8 @@ public class IssuesController {
             existing.setTitle(issue.getTitle());
             existing.setContent(issue.getContent());
             existing.setIsClosed(issue.getIsClosed());
+            existing.setPoster(issue.getPoster());
+            existing.setRepository(issue.getRepository());
             existing.setIssueNumber(issue.getIssueNumber());
 
             if (issue.getPoster() != null && issue.getPoster().getId() != null) {

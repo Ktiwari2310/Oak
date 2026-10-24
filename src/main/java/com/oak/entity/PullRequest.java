@@ -88,10 +88,10 @@ public class PullRequest {
         this.merge_branch_sha = merge_branch_sha;
     }
 
-    public boolean getIsMerged() {
+    public boolean isIs_merged() {
         return isMerged;
     }
-    public void setIsMerged(boolean isMerged) {
+    public void setIs_merged(boolean isMerged) {
         this.isMerged = isMerged;
     }
 
