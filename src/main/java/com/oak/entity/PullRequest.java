@@ -102,4 +102,11 @@ public class PullRequest {
         this.merged_at = merged_at;
     }
 
+    public boolean getIsMerged() {
+    return isMerged;
+}
+
+public void setIsMerged(boolean isMerged) {
+    this.isMerged = isMerged;
+}
 }
