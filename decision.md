@@ -5,7 +5,7 @@ This document records the backend design choices reflected in the current Oak im
 ## Platform and persistence
 
 - The service is a Java 21 Spring Boot 4.1.0 REST API. Spring MVC exposes HTTP endpoints, Spring Data JPA provides repository access, and Jakarta Persistence maps the entities.
-- The application process uses UTC so JDBC startup and persisted timestamps do not depend on host-specific timezone aliases.
+- The application sets UTC in `main()` so JDBC startup and persisted timestamps do not depend on host-specific timezone aliases when started through the main method. This default does not apply when deployed to an external Tomcat; configure the container JVM timezone separately.
 - PostgreSQL is the configured application database. H2 is included for tests.
 - Hibernate schema management is configured with `spring.jpa.hibernate.ddl-auto=update`; this updates the existing schema but should not be treated as a substitute for reviewed production migrations.
 - Entity relationships are represented with JPA associations. Controllers resolve submitted related-entity IDs through repositories before creating or changing relationships.

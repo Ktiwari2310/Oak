@@ -21,8 +21,9 @@
 
 - Bean Validation failures are converted by `GlobalExceptionHandler` to HTTP 400, with field messages in `data`.
 - `BadRequestException` becomes HTTP 400; `ResourceNotFoundException` becomes HTTP 404.
+- Missing static resources return HTTP 404, unsupported HTTP methods return 405, unsupported request media types return 415, and path-variable type mismatches return 400; each response uses the `ApiResponse` envelope.
 - `DataIntegrityViolationException` becomes HTTP 409.
-- Other exceptions become HTTP 500 with a generic message and no stack trace in the response.
+- Other exceptions are logged with their stack trace server-side and return HTTP 500 with a generic message and no stack trace in the response.
 
 ## Domain paths
 
