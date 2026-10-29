@@ -1,6 +1,8 @@
 package com.oak.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -14,99 +16,65 @@ public class PullRequest {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "issue_id",  nullable = false, unique = true)
-    public Issues issues;
+    private Issues issues;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "head_repo_id", nullable = false)
-    public Repository headRepo;
+    private Repository headRepo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "base_repo_id", nullable = false)
-    public Repository baseRepo;
+    private Repository baseRepo;
 
-    @Column(name = "head_branch",nullable = false, length = 255)
-    private String head_branch;
+    @Column(name = "head_branch", nullable = false, length = 255)
+    private String headBranch;
 
-    @Column(name = "base_branch",nullable = false, length = 255)
-    private String base_branch;
+    @Column(name = "base_branch", nullable = false, length = 255)
+    private String baseBranch;
 
-    @Column(name = "merge_branch_sha",nullable = false, length = 40)
-    private String merge_branch_sha;
+    @Column(name = "merge_branch_sha", nullable = false, length = 40)
+    private String mergeBranchSha;
 
-    @Column(name ="is_merged" ,nullable = false)
+    @Column(name = "is_merged", nullable = false)
     private boolean isMerged;
 
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     @Column(name = "merged_at")
-    private LocalDateTime merged_at;
+    private LocalDateTime mergedAt;
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-    public Issues getIssues() {
-        return issues;
-    }
-    public void setIssues(Issues issues) {
-        this.issues = issues;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Repository getHeadRepo() {
-        return headRepo;
-    }
-    public void setHeadRepo(Repository headRepo) {
-        this.headRepo = headRepo;
-    }
+    public Issues getIssues() { return issues; }
+    public void setIssues(Issues issues) { this.issues = issues; }
 
-    public Repository getBaseRepo() {
-        return baseRepo;
-    }
-    public void setBaseRepo(Repository baseRepo) {
-        this.baseRepo = baseRepo;
-    }
+    public Repository getHeadRepo() { return headRepo; }
+    public void setHeadRepo(Repository headRepo) { this.headRepo = headRepo; }
 
-    public String getHead_branch() {
-        return head_branch;
-    }
-    public void setHead_branch(String head_branch) {
-        this.head_branch = head_branch;
-    }
+    public Repository getBaseRepo() { return baseRepo; }
+    public void setBaseRepo(Repository baseRepo) { this.baseRepo = baseRepo; }
 
-    public String getBase_branch() {
-        return base_branch;
-    }
-    public void setBase_branch(String base_branch) {
-        this.base_branch = base_branch;
-    }
+    public String getHeadBranch() { return headBranch; }
+    public void setHeadBranch(String headBranch) { this.headBranch = headBranch; }
 
-    public String getMerge_branch_sha() {
-        return merge_branch_sha;
-    }
-    public void setMerge_branch_sha(String merge_branch_sha) {
-        this.merge_branch_sha = merge_branch_sha;
-    }
+    public String getBaseBranch() { return baseBranch; }
+    public void setBaseBranch(String baseBranch) { this.baseBranch = baseBranch; }
 
-    public boolean isIs_merged() {
-        return isMerged;
-    }
-    public void setIs_merged(boolean isMerged) {
-        this.isMerged = isMerged;
-    }
+    public String getMergeBranchSha() { return mergeBranchSha; }
+    public void setMergeBranchSha(String mergeBranchSha) { this.mergeBranchSha = mergeBranchSha; }
 
-    public LocalDateTime getMerged_at() {
-        return merged_at;
-    }
-    public void setMerged_at(LocalDateTime merged_at) {
-        this.merged_at = merged_at;
-    }
+    public boolean isMerged() { return isMerged; }
+    public void setMerged(boolean merged) { isMerged = merged; }
 
-    public boolean getIsMerged() {
-    return isMerged;
-}
-
-public void setIsMerged(boolean isMerged) {
-    this.isMerged = isMerged;
-}
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getMergedAt() { return mergedAt; }
+    public void setMergedAt(LocalDateTime mergedAt) { this.mergedAt = mergedAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

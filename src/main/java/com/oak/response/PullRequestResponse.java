@@ -1,6 +1,5 @@
 package com.oak.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oak.entity.PullRequest;
 
 import java.time.LocalDateTime;
@@ -10,11 +9,11 @@ public record PullRequestResponse(
         Integer issueId,
         Long headRepoId,
         Long baseRepoId,
-        @JsonProperty("head_branch") String headBranch,
-        @JsonProperty("base_branch") String baseBranch,
-        @JsonProperty("merge_branch_sha") String mergeBranchSha,
-        boolean merged,
-        @JsonProperty("merged_at") LocalDateTime mergedAt) {
+        String headBranch,
+        String baseBranch,
+        String mergeBranchSha,
+        boolean isMerged,
+        LocalDateTime mergedAt) {
 
     public static PullRequestResponse from(PullRequest pullRequest) {
         return new PullRequestResponse(
@@ -22,10 +21,10 @@ public record PullRequestResponse(
                 pullRequest.getIssues() == null ? null : pullRequest.getIssues().getId(),
                 pullRequest.getHeadRepo() == null ? null : pullRequest.getHeadRepo().getId(),
                 pullRequest.getBaseRepo() == null ? null : pullRequest.getBaseRepo().getId(),
-                pullRequest.getHead_branch(),
-                pullRequest.getBase_branch(),
-                pullRequest.getMerge_branch_sha(),
-                pullRequest.getIsMerged(),
-                pullRequest.getMerged_at());
+                pullRequest.getHeadBranch(),
+                pullRequest.getBaseBranch(),
+                pullRequest.getMergeBranchSha(),
+                pullRequest.isMerged(),
+                pullRequest.getMergedAt());
     }
 }

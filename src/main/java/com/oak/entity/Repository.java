@@ -1,11 +1,18 @@
 package com.oak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "repositories")
+@Table(name = "repositories", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_repositories_owner_name", columnNames = {"owner_id", "name"})
+})
 public class Repository {
 
     @Id
@@ -31,8 +38,21 @@ public class Repository {
     @Column(name = "clone_url", nullable = false, length = 255)
     private String clone_url;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime created_at;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonIgnore
+    private List<Issues> issues = new ArrayList<>();
+
+    @OneToMany(mappedBy = "repository", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonIgnore
+    private List<Labels> labels = new ArrayList<>();
 
     public Repository() {}
 
@@ -98,5 +118,25 @@ public class Repository {
 
     public void setCreated_at(LocalDateTime created_at) {
         this.created_at = created_at;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<Issues> getIssues() {
+        return issues;
+    }
+
+    public void setIssues(List<Issues> issues) {
+        this.issues = issues;
+    }
+
+    public List<Labels> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<Labels> labels) {
+        this.labels = labels;
     }
 }

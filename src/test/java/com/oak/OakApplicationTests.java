@@ -1,12 +1,12 @@
 package com.oak;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.oak.entity.User;
+import com.oak.request.CreateUserRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
+import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 @SpringBootTest(properties = {
 		"spring.datasource.url=jdbc:h2:mem:oak;DB_CLOSE_DELAY=-1",
 		"spring.datasource.username=sa",
@@ -20,10 +20,14 @@ class OakApplicationTests {
 	}
 
 	@Test
-	void userIdIsGeneratedByTheServer() throws Exception {
-		User user = new ObjectMapper().readValue("{\"id\":0}", User.class);
+	void createUserRequestDoesNotExposeServerManagedFields() {
+		var fields = Arrays.stream(CreateUserRequest.class.getRecordComponents())
+				.map(component -> component.getName())
+				.toList();
 
-		assertNull(user.getId());
+		assertFalse(fields.contains("id"));
+		assertFalse(fields.contains("createdAt"));
+		assertFalse(fields.contains("isAdmin"));
 	}
 
 }

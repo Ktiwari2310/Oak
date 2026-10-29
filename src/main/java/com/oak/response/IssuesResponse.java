@@ -7,7 +7,7 @@ public class IssuesResponse {
 
     private Integer id;
     private Long repositoryId;
-    private Long userId;
+    private Long posterId;
     private Integer issueNumber;
     private String title;
     private String content;
@@ -17,11 +17,11 @@ public class IssuesResponse {
     public IssuesResponse() {
     }
 
-    public IssuesResponse(Integer id, Long repositoryId, Long userId, Integer issueNumber,
+    public IssuesResponse(Integer id, Long repositoryId, Long posterId, Integer issueNumber,
                           String title, String content, Boolean isClosed, LocalDateTime createdAt) {
         this.id = id;
         this.repositoryId = repositoryId;
-        this.userId = userId;
+        this.posterId = posterId;
         this.issueNumber = issueNumber;
         this.title = title;
         this.content = content;
@@ -58,12 +58,12 @@ public class IssuesResponse {
         this.repositoryId = repositoryId;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getPosterId() {
+        return posterId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setPosterId(Long posterId) {
+        this.posterId = posterId;
     }
 
     public Integer getIssueNumber() {

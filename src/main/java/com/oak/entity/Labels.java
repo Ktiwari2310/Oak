@@ -1,12 +1,17 @@
 package com.oak.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "labels")
+@Table(name = "labels", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_labels_repo_name", columnNames = {"repo_id", "name"})
+})
 public class Labels{
 
     @Id
@@ -26,6 +31,14 @@ public class Labels{
 
     @Column(columnDefinition = "text")
     private String description;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     // one label appears on many issue_labels join rows (issue_labels.label_id -> labels.id)
     @OneToMany(mappedBy = "label", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,4 +66,6 @@ public class Labels{
 
     public List<IssuesLabels> getIssueLabels() { return issueLabels; }
     public void setIssueLabels(List<IssuesLabels> issueLabels) { this.issueLabels = issueLabels; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

@@ -10,5 +10,4 @@ public interface LabelsRepository extends JpaRepository<Labels, Integer> {
 
     List<Labels> findByRepositoryId(Long repositoryId);
 
-    List<Labels> findByName(String name);
 }

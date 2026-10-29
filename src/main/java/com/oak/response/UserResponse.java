@@ -1,6 +1,5 @@
 package com.oak.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oak.entity.User;
 
 import java.time.LocalDateTime;
@@ -8,10 +7,10 @@ import java.time.LocalDateTime;
 public record UserResponse(
         Long id,
         String username,
-        @JsonProperty("full_name") String fullName,
+        String fullName,
         String email,
-        @JsonProperty("is_admin") boolean admin,
-        @JsonProperty("created_at") LocalDateTime createdAt) {
+        boolean isAdmin,
+        LocalDateTime createdAt) {
 
     public static UserResponse from(User user) {
         return new UserResponse(

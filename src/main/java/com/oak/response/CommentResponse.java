@@ -1,7 +1,7 @@
 package com.oak.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oak.entity.Comment;
+import com.oak.entity.CommentType;
 
 import java.time.LocalDateTime;
 
@@ -9,9 +9,9 @@ public record CommentResponse(
         Long id,
         Integer issueId,
         Long posterId,
-        String type,
+        CommentType type,
         String content,
-        @JsonProperty("created_at") LocalDateTime createdAt) {
+        LocalDateTime createdAt) {
 
     public static CommentResponse from(Comment comment) {
         return new CommentResponse(

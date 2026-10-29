@@ -6,15 +6,20 @@ import com.oak.repository.RepositoryRepository;
 import com.oak.repository.UserRepository;
 import com.oak.response.ApiResponse;
 import com.oak.response.RepositoryResponse;
+import com.oak.request.CreateRepositoryRequest;
+import com.oak.request.UpdateRepositoryRequest;
+import com.oak.exception.ResourceNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/repositories")
@@ -22,51 +27,52 @@ public class RepositoryController {
 
     private static final Logger logger = LoggerFactory.getLogger(RepositoryController.class);
 
-    @Autowired
-    private RepositoryRepository repositoryRepository;
+    private final RepositoryRepository repositoryRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public RepositoryController(RepositoryRepository repositoryRepository, UserRepository userRepository) {
+        this.repositoryRepository = repositoryRepository;
+        this.userRepository = userRepository;
+    }
 
     // Get all repositories
+    // TODO(security): restrict private repository results to their authenticated owner.
     @GetMapping
-    public ApiResponse<List<RepositoryResponse>> getAllRepositories() {
-        List<Repository> repositories = repositoryRepository.findAll();
-        logger.info("Repositories retrieved successfully: count={}", repositories.size());
+    public ApiResponse<Page<RepositoryResponse>> getAllRepositories(
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+        Page<Repository> repositories = repositoryRepository.findAll(pageable);
+        logger.info("Repositories retrieved successfully: count={}", repositories.getNumberOfElements());
 
         return ApiResponse.success(
                 "Repositories retrieved successfully",
-                repositories.stream().map(RepositoryResponse::from).toList());
+                repositories.map(RepositoryResponse::from));
     }
 
     // Get repository by ID
+    // TODO(security): reject private repository reads by callers other than the owner.
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<RepositoryResponse>> getRepositoryById(@PathVariable Long id) {
-
-        return repositoryRepository.findById(id)
-                .map(RepositoryResponse::from)
-                .map(response -> {
-                    logger.info("Repository retrieved successfully: id={}", id);
-                    return ResponseEntity.ok(
-                            ApiResponse.success("Repository retrieved successfully", response));
-                })
-                .orElseGet(() -> {
-                    logger.warn("Repository retrieval failed: id={} was not found", id);
-                    return ResponseEntity.notFound().build();
-                });
+        Repository repository = repositoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found: " + id));
+        logger.info("Repository retrieved successfully: id={}", id);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Repository retrieved successfully", RepositoryResponse.from(repository)));
     }
 
     // Create repository
     @PostMapping
     public ResponseEntity<ApiResponse<RepositoryResponse>> createRepository(
-            @RequestBody Repository repository) {
+            @Valid @RequestBody CreateRepositoryRequest request) {
 
-if (repository.getOwner() == null || repository.getOwner().getId() == null) {
-    return ResponseEntity.badRequest().build();
-}
-        User owner = userRepository.findById(repository.getOwner().getId())
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+User owner = userRepository.findById(request.ownerId())
+        .orElseThrow(() -> new ResourceNotFoundException("Owner not found: " + request.ownerId()));
 
+        Repository repository = new Repository();
+        repository.setName(request.name());
+        repository.setDescription(request.description());
+        repository.setIs_private(request.isPrivate());
+        repository.setIs_mirror(request.isMirror());
+        repository.setClone_url(request.cloneUrl());
         repository.setId(null); // Force INSERT
         repository.setOwner(owner);
 
@@ -84,36 +90,36 @@ if (repository.getOwner() == null || repository.getOwner().getId() == null) {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<RepositoryResponse>> updateRepository(
             @PathVariable Long id,
-            @RequestBody Repository repository) {
+            @Valid @RequestBody UpdateRepositoryRequest repository) {
 
-        return repositoryRepository.findById(id).map(existing -> {
+        Repository existing = repositoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found: " + id));
 
-            if (repository.getOwner() != null && repository.getOwner().getId() != null) {
-                User owner = userRepository.findById(repository.getOwner().getId())
-                        .orElseThrow(() -> new RuntimeException("Owner not found"));
+        if (repository.ownerId() != null) {
+            User owner = userRepository.findById(repository.ownerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Owner not found: " + repository.ownerId()));
+            existing.setOwner(owner);
+        }
+        if (repository.name() != null) {
+            existing.setName(repository.name());
+        }
+        if (repository.description() != null) {
+            existing.setDescription(repository.description());
+        }
+        if (repository.isPrivate() != null) {
+            existing.setIs_private(repository.isPrivate());
+        }
+        if (repository.isMirror() != null) {
+            existing.setIs_mirror(repository.isMirror());
+        }
+        if (repository.cloneUrl() != null) {
+            existing.setClone_url(repository.cloneUrl());
+        }
 
-                existing.setOwner(owner);
-            }
-
-            existing.setName(repository.getName());
-            existing.setDescription(repository.getDescription());
-            existing.setIs_private(repository.getIs_private());
-            existing.setIs_mirror(repository.getIs_mirror());
-            existing.setClone_url(repository.getClone_url());
-
-            Repository updatedRepository = repositoryRepository.save(existing);
-
-            logger.info("Repository updated successfully: id={}", id);
-
-            return ResponseEntity.ok(
-                    ApiResponse.success(
-                            "Repository updated successfully",
-                            RepositoryResponse.from(updatedRepository)));
-
-        }).orElseGet(() -> {
-            logger.warn("Repository update failed: id={} was not found", id);
-            return ResponseEntity.notFound().build();
-        });
+        Repository updatedRepository = repositoryRepository.save(existing);
+        logger.info("Repository updated successfully: id={}", id);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Repository updated successfully", RepositoryResponse.from(updatedRepository)));
     }
 
     // Delete repository
@@ -121,8 +127,7 @@ if (repository.getOwner() == null || repository.getOwner().getId() == null) {
     public ResponseEntity<ApiResponse<Void>> deleteRepository(@PathVariable Long id) {
 
         if (!repositoryRepository.existsById(id)) {
-            logger.warn("Repository deletion failed: id={} was not found", id);
-            return ResponseEntity.notFound().build();
+            throw new ResourceNotFoundException("Repository not found: " + id);
         }
 
         repositoryRepository.deleteById(id);

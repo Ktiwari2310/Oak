@@ -1,6 +1,5 @@
 package com.oak.response;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.oak.entity.Repository;
 
 import java.time.LocalDateTime;
@@ -10,10 +9,10 @@ public record RepositoryResponse(
         Long ownerId,
         String name,
         String description,
-        @JsonProperty("is_private") Boolean isPrivate,
-        @JsonProperty("is_mirror") Boolean isMirror,
-        @JsonProperty("clone_url") String cloneUrl,
-        @JsonProperty("created_at") LocalDateTime createdAt) {
+        Boolean isPrivate,
+        Boolean isMirror,
+        String cloneUrl,
+        LocalDateTime createdAt) {
 
     public static RepositoryResponse from(Repository repository) {
         return new RepositoryResponse(

@@ -3,11 +3,16 @@ package com.oak.entity;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
+        @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+})
 public class User {
 
     @Id
@@ -30,8 +35,13 @@ public class User {
     @Column(name = "is_admin", nullable = false)
     private boolean is_admin;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime created_at;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
 
 
@@ -41,8 +51,7 @@ public class User {
     @JsonIgnore
     private List<Repository> repositories;
 
-    // One User can post many Issues
-    // Issues stores this relationship in its "user" field, not "poster".
+    // One User can post many Issues.
     @OneToMany(mappedBy = "poster")
     @JsonIgnore
     private List<Issues> issues;
@@ -119,6 +128,10 @@ public class User {
 
     public void setCreated_at(LocalDateTime created_at) {
         this.created_at = created_at;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
 

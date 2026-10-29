@@ -1,5 +1,7 @@
 package com.oak.entity;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -19,14 +21,20 @@ public class Comment {
     @JoinColumn(name = "poster_id", nullable = false)
     private User poster;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String type;
+    private CommentType type;
 
     @Column(nullable = false, columnDefinition = "text")
     private String content;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime created_at = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime created_at;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     public Comment() {}
 
@@ -51,10 +59,10 @@ public class Comment {
         this.id = id;
     }
 
-    public String getType() {
+    public CommentType getType() {
         return type;
     }
-    public void setType(String type) {
+    public void setType(CommentType type) {
         this.type = type;
     }
 
@@ -70,5 +78,9 @@ public class Comment {
     }
     public void setCreated_at(LocalDateTime created_at) {
         this.created_at = created_at;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

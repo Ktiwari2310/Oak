@@ -2,13 +2,23 @@ package com.oak.controller;
 
 import com.oak.entity.Labels;
 import com.oak.repository.LabelsRepository;
+import com.oak.repository.RepositoryRepository;
 import com.oak.response.LabelsResponse;
 import com.oak.response.ApiResponse;
+import com.oak.request.CreateLabelRequest;
+import com.oak.request.UpdateLabelRequest;
+import com.oak.exception.ResourceNotFoundException;
+import com.oak.exception.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -18,32 +28,35 @@ public class LabelsController {
 
     private static final Logger logger = LoggerFactory.getLogger(LabelsController.class);
 
-    @Autowired
-    private LabelsRepository labelsRepository;
+    private final LabelsRepository labelsRepository;
+    private final RepositoryRepository repositoryRepository;
+
+    public LabelsController(LabelsRepository labelsRepository, RepositoryRepository repositoryRepository) {
+        this.labelsRepository = labelsRepository;
+        this.repositoryRepository = repositoryRepository;
+    }
 
     @GetMapping
-    public ApiResponse<List<LabelsResponse>> getAllLabels() {
-        List<Labels> labels = labelsRepository.findAll();
-        logger.info("Labels retrieved successfully: count={}", labels.size());
+    // TODO(security): hide labels belonging to private repositories from non-owners.
+    public ApiResponse<Page<LabelsResponse>> getAllLabels(
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+        Page<Labels> labels = labelsRepository.findAll(pageable);
+        logger.info("Labels retrieved successfully: count={}", labels.getNumberOfElements());
         return ApiResponse.success("Labels retrieved successfully",
-                labels.stream().map(LabelsResponse::from).toList());
+                labels.map(LabelsResponse::from));
     }
 
     @GetMapping("/{id}")
+    // TODO(security): verify access to the label's repository before returning it.
     public ResponseEntity<ApiResponse<LabelsResponse>> getLabelById(@PathVariable Integer id) {
-        return labelsRepository.findById(id)
-                .map(LabelsResponse::from)
-                .map(response -> {
-                    logger.info("Label retrieved successfully: id={}", id);
-                    return ResponseEntity.ok(ApiResponse.success("Label retrieved successfully", response));
-                })
-                .orElseGet(() -> {
-                    logger.warn("Label retrieval failed: id={} was not found", id);
-                    return ResponseEntity.notFound().build();
-                });
+        Labels label = labelsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found: " + id));
+        logger.info("Label retrieved successfully: id={}", id);
+        return ResponseEntity.ok(ApiResponse.success("Label retrieved successfully", LabelsResponse.from(label)));
     }
 
     @GetMapping("/repository/{repoId}")
+    // TODO(security): require repository ownership when the repository is private.
     public ApiResponse<List<LabelsResponse>> getLabelsByRepository(@PathVariable Long repoId) {
         List<Labels> labels = labelsRepository.findByRepositoryId(repoId);
         logger.info("Labels retrieved successfully for repository: repositoryId={}, count={}", repoId, labels.size());
@@ -52,35 +65,51 @@ public class LabelsController {
     }
 
     @PostMapping
-    public ApiResponse<LabelsResponse> createLabel(@RequestBody Labels label) {
+    public ResponseEntity<ApiResponse<LabelsResponse>> createLabel(@Valid @RequestBody CreateLabelRequest request) {
+        var repository = repositoryRepository.findById(request.repositoryId()).orElse(null);
+        if (repository == null) {
+            throw new BadRequestException("Repository was not found");
+        }
+
+        Labels label = new Labels();
+        label.setName(request.name());
+        label.setColor(request.color());
+        label.setDescription(request.description());
+        label.setId(null);
+        label.setRepository(repository);
         Labels savedLabel = labelsRepository.save(label);
         logger.info("Label created successfully: id={}", savedLabel.getId());
-        return ApiResponse.success("Label created successfully", LabelsResponse.from(savedLabel));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Label created successfully", LabelsResponse.from(savedLabel)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<LabelsResponse>> updateLabel(@PathVariable Integer id, @RequestBody Labels label) {
-        return labelsRepository.findById(id).map(existing -> {
-            existing.setName(label.getName());
-            existing.setColor(label.getColor());
-            existing.setDescription(label.getDescription());
-            Labels updatedLabel = labelsRepository.save(existing);
-            logger.info("Label updated successfully: id={}", id);
-            return ResponseEntity.ok(ApiResponse.success("Label updated successfully", LabelsResponse.from(updatedLabel)));
-        }).orElseGet(() -> {
-            logger.warn("Label update failed: id={} was not found", id);
-            return ResponseEntity.notFound().build();
-        });
+    public ResponseEntity<ApiResponse<LabelsResponse>> updateLabel(
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateLabelRequest label) {
+        Labels existing = labelsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Label not found: " + id));
+        if (label.name() != null) {
+            existing.setName(label.name());
+        }
+        if (label.color() != null) {
+            existing.setColor(label.color());
+        }
+        if (label.description() != null) {
+            existing.setDescription(label.description());
+        }
+        Labels updatedLabel = labelsRepository.save(existing);
+        logger.info("Label updated successfully: id={}", id);
+        return ResponseEntity.ok(ApiResponse.success("Label updated successfully", LabelsResponse.from(updatedLabel)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteLabel(@PathVariable Integer id) {
-        if (labelsRepository.existsById(id)) {
-            labelsRepository.deleteById(id);
-            logger.info("Label deleted successfully: id={}", id);
-            return ResponseEntity.ok(ApiResponse.success("Label deleted successfully", null));
+        if (!labelsRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Label not found: " + id);
         }
-        logger.warn("Label deletion failed: id={} was not found", id);
-        return ResponseEntity.notFound().build();
+        labelsRepository.deleteById(id);
+        logger.info("Label deleted successfully: id={}", id);
+        return ResponseEntity.ok(ApiResponse.success("Label deleted successfully", null));
     }
 }
