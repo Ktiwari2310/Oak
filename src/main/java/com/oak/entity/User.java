@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 @Entity
 @Table(name = "users")
@@ -24,6 +25,7 @@ public class User {
     private String email;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonAlias({"password"})
     @Column(name = "password_hash", nullable = false, length = 255)
     private String password_hash;
 

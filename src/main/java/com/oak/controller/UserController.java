@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,9 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     // Get all users
@@ -59,6 +63,11 @@ public class UserController {
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody User user) {
 
+        // Hash password before saving to database
+        if (user.getPassword_hash() != null && !user.getPassword_hash().isBlank()) {
+            user.setPassword_hash(passwordEncoder.encode(user.getPassword_hash()));
+        }
+
         User savedUser = userRepository.save(user);
         logger.info("User created successfully: id={}", savedUser.getId());
 
@@ -86,7 +95,12 @@ public class UserController {
         user.setUsername(userDetails.getUsername());
         user.setFull_name(userDetails.getFull_name());
         user.setEmail(userDetails.getEmail());
-        user.setPassword_hash(userDetails.getPassword_hash());
+
+        // Only re-hash and update if a new password was provided
+        if (userDetails.getPassword_hash() != null && !userDetails.getPassword_hash().isBlank()) {
+            user.setPassword_hash(passwordEncoder.encode(userDetails.getPassword_hash()));
+        }
+
         user.setIs_admin(userDetails.isIs_admin());
 
         User updatedUser = userRepository.save(user);
